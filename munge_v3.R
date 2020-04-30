@@ -31,10 +31,7 @@ rt.func.v2<-function(dat,mean.Weibull=4.8,sd.Weibull=2.3){
 
 
 
-#setwd('~/working/cov_map_working/')
-
-
-covid_db <- dbConnect(RSQLite::SQLite(), 'data/covid_db.sqlite')
+covid_db <- dbConnect(RSQLite::SQLite(), '/home/ubuntu/cov_api/data/covid_db.sqlite')
 
 #---check if need to update
 x <- tbl(covid_db, 'counties') %>%
@@ -120,6 +117,32 @@ if(db_date != facts_date){
   #---moving averages
   df <- df[order(countyFIPS, date)]
   df <- df[, r_t_three := frollmean(r_t, n = 3), by = countyFIPS]
+  
+  
+  final <- list()
+  u_id <- unique(df$countyFIPS)
+  pb <- txtProgressBar(max = length(u_id), style = 3)
+  for(j in 1:length(u_id)){
+    sub <- df[countyFIPS == u_id[j]]
+    sub <- sub[order(-date)]
+    
+    out <- list()
+    for(i in 1:length(sub$case_count)){
+      half <- sub$case_count[i]/2
+      
+      index <- which(sub$case_count < half)[1]
+      
+      out[[i]] <- as.numeric(sub$date[index] - sub$date[i]) * -1
+    }
+    
+    sub[, doubling := unlist(out)]
+    
+    final[[j]] <- sub
+    setTxtProgressBar(pb, j)
+  }
+  
+  df <- rbindlist(final)
+  df <- df[order(date)]
   
   #---check if day before agrees with data as a check...
   yesterday <- as.character(max(df$date) - 1)
