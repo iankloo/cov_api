@@ -30,8 +30,9 @@ rt.func.v2<-function(dat,mean.Weibull=4.8,sd.Weibull=2.3){
 }
 
 
+covid_db <- dbConnect(RSQLite::SQLite(), '~/working/cov_api/data/covid_db.sqlite')
 
-covid_db <- dbConnect(RSQLite::SQLite(), '/home/ubuntu/cov_api/data/covid_db.sqlite')
+#covid_db <- dbConnect(RSQLite::SQLite(), '/home/ubuntu/cov_api/data/covid_db.sqlite')
 
 #---check if need to update
 x <- tbl(covid_db, 'counties') %>%
